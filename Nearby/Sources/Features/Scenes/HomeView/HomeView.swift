@@ -9,7 +9,11 @@ import Foundation
 import MapKit
 
 class HomeView: UIView {
-    private let mapView: MKMapView = {
+    private var filterButtonAction: ((Category) -> Void)?
+    private var categories: [Category] = []
+    private var selectedButton: UIButton?
+    
+    let mapView: MKMapView = {
         let mapView = MKMapView()
         mapView.translatesAutoresizingMaskIntoConstraints = false
         return mapView
@@ -19,6 +23,7 @@ class HomeView: UIView {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.showsHorizontalScrollIndicator = false
+        scrollView.isUserInteractionEnabled = true
         return scrollView
     }()
     
@@ -27,6 +32,7 @@ class HomeView: UIView {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .horizontal
         stackView.spacing = 8
+        stackView.isUserInteractionEnabled = true
         stackView.distribution = .fill
         return stackView
     }()
@@ -53,6 +59,7 @@ class HomeView: UIView {
         let label = UILabel()
         label.text = "Explore locais perto de você"
         label.font = Typography.textMD
+        label.textColor = Colors.gray600
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -70,7 +77,6 @@ class HomeView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
-        setupButtons()
     }
 
     required init?(coder: NSCoder) {
@@ -102,10 +108,10 @@ class HomeView: UIView {
             mapView.trailingAnchor.constraint(equalTo: trailingAnchor),
             mapView.heightAnchor.constraint(equalTo: self.heightAnchor, multiplier: 0.65),
             
-            filterScrollView.topAnchor.constraint(equalTo: topAnchor, constant: 65),
+            filterScrollView.topAnchor.constraint(equalTo: topAnchor, constant: 48),
             filterScrollView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
             filterScrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            filterScrollView.heightAnchor.constraint(equalToConstant: 36),
+            filterScrollView.heightAnchor.constraint(equalToConstant: 86),
             
             filterStackView.topAnchor.constraint(equalTo: filterScrollView.topAnchor),
             filterStackView.leadingAnchor.constraint(equalTo: filterScrollView.leadingAnchor),
@@ -138,35 +144,73 @@ class HomeView: UIView {
         ])
     }
     
-    private func setupButtons() {
-        let buttons = [
-        createFilterButton(title: "Alimentação", iconName: "fork.knife"),
-        createFilterButton(title: "Compras", iconName: "cart"),
-        createFilterButton(title: "Hospedagem", iconName: "bed.double"),
-        createFilterButton(title: "Saúde", iconName: "heart"),
-        createFilterButton(title: "Educação", iconName: "book")
-        ]
-        
-        buttons.forEach { button in
-            filterStackView.addArrangedSubview(button)
-        }
-    }
-    
     private func createFilterButton(title: String, iconName: String) -> UIButton {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle(title, for: .normal)
         button.setImage(UIImage(systemName: iconName), for: .normal)
-        button.tintColor = Colors.gray100
         button.layer.cornerRadius = 8
-        button.backgroundColor = Colors.greenBase
+        button.tintColor = Colors.gray600
+        button.backgroundColor = Colors.gray100
+        button.setTitleColor(Colors.gray600, for: .normal)
         button.titleLabel?.font = Typography.textSM
+        button.heightAnchor.constraint(equalToConstant: 36).isActive = true
         button.imageView?.contentMode = .scaleAspectFit
         button.imageView?.heightAnchor.constraint(equalToConstant: 13).isActive = true
         button.imageView?.widthAnchor.constraint(equalToConstant: 11).isActive = true
         button.imageEdgeInsets = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 8)
         button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
+        
+        filterStackView.isLayoutMarginsRelativeArrangement = true
+        filterStackView.layoutMargins = UIEdgeInsets(top: 2, left: 0, bottom: 2, right: 0)
         return button
+    }
+    
+    private func updateButtonSelection(button: UIButton) {
+        if let previousButton = selectedButton {
+            previousButton.backgroundColor = Colors.gray100
+            previousButton.setTitleColor(Colors.gray600, for: .normal)
+            previousButton.tintColor = Colors.gray600
+        }
+        
+        button.backgroundColor = Colors.greenBase
+        button.setTitleColor(Colors.gray100, for: .normal)
+        button.tintColor = Colors.gray100
+        
+        selectedButton = button
+    }
+    
+    func reloadTableViewData() {
+        DispatchQueue.main.async {
+            self.placesTableView.reloadData()
+        }
+    }
+    
+    func updateFilterButtons(witch categories: [Category], action: @escaping (Category) -> Void) {
+        let categoryIcons: [String: String] = [
+            "Alimentaçao" : "fork.knife",
+            "Compras": "cart",
+            "Hospedagem": "bed.double",
+            "Padaria": "cup.and.saucer"
+        ]
+        
+        self.categories = categories
+        self.filterButtonAction = action
+        
+        for (index, category) in categories.enumerated() {
+            let iconName = categoryIcons[category.name] ?? "questionmaek.circle"
+            let button = createFilterButton(title: category.name, iconName: iconName)
+            button.tag = index
+            button.addTarget(self, action: #selector(filterButtonTapped(_:)), for: .touchUpInside)
+            filterStackView.addArrangedSubview(button)
+        }
+    }
+    
+    @objc
+    private func filterButtonTapped(_ sender: UIButton) {
+        let selectedCategory = categories[sender.tag]
+        updateButtonSelection(button: sender)
+        filterButtonAction?(selectedCategory)
     }
     
     func configureTableViewDelegate(_ delegate: UITableViewDelegate, dataSource: UITableViewDataSource) {
