@@ -10,7 +10,6 @@ import UIKit
 
 class WelcomeView:UIView {
     var didTapButton: (() -> Void?)?
-    
     private let logoImageView: UIImageView = {
         let image = UIImageView(image: UIImage(named: "logo"))
         image.contentMode = .scaleAspectFit

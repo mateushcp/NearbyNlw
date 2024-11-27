@@ -15,7 +15,6 @@ class WelcomeViewController: UIViewController {
     init(contentView: WelcomeView) {
         self.contentView = contentView
         super.init(nibName: nil, bundle: nil)
-        self.flowDelegate = self
         
         contentView.didTapButton = { [weak self] in
             self?.flowDelegate?.goToHome()
@@ -40,5 +39,11 @@ class WelcomeViewController: UIViewController {
     
     private func setupConstraints() {
         self.setupContentViewToViewController(contentView: contentView)
+    }
+}
+
+extension WelcomeViewController: WelcomeFlowDelegate {
+    func goToHome() {
+        //
     }
 }

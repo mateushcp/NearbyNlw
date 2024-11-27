@@ -22,22 +22,20 @@ class HomeViewController: UIViewController {
         defineInitialLocation()
         
         homeViewModel.fetchInitialData { [weak self] categories in
-            guard let self = self else {return}
+            guard let self = self else { return }
             self.homeView.updateFilterButtons(with: categories) { selectedCategory in
                 self.filterPlaces(by: selectedCategory)
             }
         }
         
-        self.addAnnotarionsToMap()
+        self.addAnnotationsToMap()
         homeViewModel.didUpdatePlaces = { [weak self] in
             DispatchQueue.main.async {
                 self?.places = self?.homeViewModel.places ?? []
                 self?.homeView.reloadTableViewData()
-                self?.addAnnotarionsToMap()
+                self?.addAnnotationsToMap()
             }
-            
         }
-        
     }
     
     private func defineInitialLocation() {
@@ -45,7 +43,7 @@ class HomeViewController: UIViewController {
         homeView.mapView.setRegion(MKCoordinateRegion(center: initialLocation, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)), animated: false)
     }
     
-    private func addAnnotarionsToMap() {
+    private func addAnnotationsToMap() {
         homeView.mapView.removeAnnotations(homeView.mapView.annotations)
         let annotations = places.map { PlaceAnnotation(place: $0) }
         
@@ -59,7 +57,6 @@ class HomeViewController: UIViewController {
         let currentCenter = homeView.mapView.region.center
         homeViewModel.fetchPlaces(for: category.id, userLocation: currentCenter)
     }
-    
 }
 
 extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
@@ -68,7 +65,8 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: PlaceTableViewCell.identifier, for: indexPath) as? PlaceTableViewCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: PlaceTableViewCell.identifier, for: indexPath)
+                as? PlaceTableViewCell else {
             return UITableViewCell()
         }
         
@@ -83,18 +81,17 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        let detailsVC = DetailsViewController()
-        detailsVC.place = places[indexPath.row]
-        navigationController?.pushViewController(detailsVC, animated: true)
+        let detailsViewController = DetailsViewController()
+        detailsViewController.place = places[indexPath.row]
+        navigationController?.pushViewController(detailsViewController, animated: true)
     }
-    
 }
 
 extension HomeViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         guard !(annotation is MKUserLocation) else { return nil }
         
-        var identifier = "CustomPin"
+        let identifier = "CustomPin"
         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKAnnotationView
         
         if annotationView == nil {
@@ -104,7 +101,7 @@ extension HomeViewController: MKMapViewDelegate {
             
             if let pinImage = UIImage(named: "mapIcon") {
                 annotationView?.image = pinImage
-                annotationView?.frame.size = CGSize(width: 28, height: 32)
+                annotationView?.frame.size = CGSize(width: 36, height: 48)
             }
         } else {
             annotationView?.annotation = annotation
