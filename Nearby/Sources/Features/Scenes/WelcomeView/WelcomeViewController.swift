@@ -10,10 +10,16 @@ import UIKit
 
 class WelcomeViewController: UIViewController {
     let contentView: WelcomeView
+    weak var flowDelegate: WelcomeFlowDelegate?
     
     init(contentView: WelcomeView) {
         self.contentView = contentView
         super.init(nibName: nil, bundle: nil)
+        self.flowDelegate = self
+        
+        contentView.didTapButton = { [weak self] in
+            self?.flowDelegate?.goToHome()
+        }
 
     }
     

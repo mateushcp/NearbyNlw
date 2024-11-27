@@ -126,7 +126,6 @@ class PlaceTableViewCell: UITableViewCell {
                 }
             }.resume()
         }
-        
         titleLabel.text = place.name
         descriptionLabel.text = place.description
         ticketLabel.text = "\(place.coupons) cupons disponíveis"

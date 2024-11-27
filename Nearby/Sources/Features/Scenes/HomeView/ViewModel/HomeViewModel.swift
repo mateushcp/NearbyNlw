@@ -2,7 +2,7 @@
 //  HomeViewModel.swift
 //  Nearby
 //
-//  Created by Mateus Henrique Coelho de Paulo on 18/11/24.
+//  Created by Mateus Henrique Coelho de Paulo on 20/11/24.
 //
 
 import Foundation
@@ -10,8 +10,10 @@ import CoreLocation
 
 class HomeViewModel {
     private let baseURL = "http://127.0.0.1:3333"
-    var categories: [Category] = []
+    var userLatitude = -23.561187293883442
+    var userLongitude = -46.656451388116494
     var places: [Place] = []
+    var vategories: [Category] = []
     var filteredPlaces: [Place] = []
     
     var didUpdateCategories: (() -> Void)?
@@ -20,21 +22,20 @@ class HomeViewModel {
     func fetchInitialData(completion: @escaping ([Category]) -> Void) {
         fetchCategories { categories in
             completion(categories)
-            if let foodCategory = categories.first(where: { $0.name == "Alimentação"}) {
-                self.fetchPlaces(for: foodCategory.id, userLocation: CLLocationCoordinate2D(latitude: -23.561187293883442, longitude: -46.656451388116494))
+            if let foodCategory = categories.first(where: {$0.name == "Alimentação"}) {
+                self.fetchPlaces(for: foodCategory.id, userLocation: CLLocationCoordinate2D(latitude: self.userLatitude, longitude: self.userLongitude))
             }
         }
-        
     }
     
-    private func fetchCategories(completion: @escaping ([Category]) -> Void) {
+    func fetchCategories(completion: @escaping ([Category]) -> Void) {
         guard let url = URL(string: "\(baseURL)/categories") else {
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, _, error in
             if let error = error {
-                print("Error fetching places: \(error)")
+                print("Deu erro")
                 return
             }
             
@@ -49,9 +50,10 @@ class HomeViewModel {
                     completion(categories)
                 }
             } catch {
-                print("Error decoding categories: \(error)")
+                print("Deu erro ao pegar categorias de data")
                 completion([])
             }
+            
         }.resume()
     }
     
@@ -60,9 +62,9 @@ class HomeViewModel {
             return
         }
         
-        URLSession.shared.dataTask(with: url) { [ weak self ] data, _, error in
+        URLSession.shared.dataTask(with: url) { data, _, error in
             if let error = error {
-                print("Error fetching places: \(error)")
+                print("Deu erro")
                 return
             }
             
@@ -71,14 +73,15 @@ class HomeViewModel {
             }
             
             do {
-                self?.places = try JSONDecoder().decode([Place].self, from: data)
+                self.places = try JSONDecoder().decode([Place].self, from: data)
                 DispatchQueue.main.async {
-                    self?.didUpdatePlaces?()
+                    self.didUpdatePlaces?()
                 }
             } catch {
-                print("error Decoding places: \(error)")
+                print("Deu erro ao pegar categorias de data")
+
             }
+            
         }.resume()
     }
-    
 }
